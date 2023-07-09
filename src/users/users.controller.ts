@@ -1,59 +1,49 @@
-import {Controller, Get, Post, Body, Patch, Param, Delete, Res, HttpCode, BadRequestException, Redirect} from '@nestjs/common';
-import { UsersService } from './users.service';
+import {Body, Post, Controller, Query, Get, Param, Delete} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { GetUsersDto } from './dto/get-user.dto';
+import {VerifyEmailDto} from "./dto/verify-email.dto";
+import {UserLoginDto} from "./dto/user-login.dto";
+import {UserInfo} from "./UserInfo";
+import {UsersService} from "./users.service";
 
 @Controller('users')
 export class UsersController {
 
+    constructor(private usersService: UsersService){}
 
-  constructor(private readonly usersService: UsersService) {}
-
-  @Post()
-  create(@Body() createUserDto: CreateUserDto){
-    const {name, email} = createUserDto;
-    return `유저를 생성했습니다. 이름: ${name}, 이메일: ${email}`;
-  }
-  // @Post()
-  // create(@Body() createUserDto: CreateUserDto) {
-  //   return this.usersService.create(createUserDto);
-  // }
-
-  @Get()
-  findAll(@Res() res) {
-    const users = this.usersService.findAll()
-    // return this.usersService.findAll();
-    return res.status(200).send(users)
-  }
-
-  // @Redirect('https://nestjs.com', 301)
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    if(+id <1){
-      throw new BadRequestException('id는 0보다 큰 값이어야 합니다.');
+    @Post()
+    async createUser(@Body() dto: CreateUserDto): Promise<void> {
+        // console.log(dto);
+        const {name, email, password } = dto;
+        await this.usersService.createUser(name,email,password);
     }
-    return this.usersService.findOne(+id);
-  }
-  @HttpCode(202)
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
-  }
 
-  @Delete(':userId/memo/:memoId')
-  deleteUserMemo(
-      @Param('userId')userId: string,
-      @Param('memoId')memoId: string,
-  ){
-    return `userId: ${userId}, memoId: ${memoId}`;
+    @Post('/email-verify')
+    async verifyEmail(@Query() dto: VerifyEmailDto): Promise<string>{
+        const {signupVerifyToken} = dto;
 
-  }
+        return await this.usersService.verifyEmail(signupVerifyToken);
+    }
+
+    @Post('/login')
+    async login(@Body() dto: UserLoginDto): Promise<string> {
+        const { email, password } = dto;
+        return await this.usersService.login(email,password);
+    }
+
+    @Get('/:id')
+    async getUserInfo(@Param('id') userId: string): Promise<UserInfo> {
+        return await this.usersService.getUserInfo(userId);
+        return;
+    }
+
+    @Delete(':id')
+    remove(@Param('id') id: string){
+        return this.usersService.remove(+id);
+    }
+
+
 }
+
 
 

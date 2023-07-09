@@ -1,14 +1,12 @@
-import { Request } from 'express';
-import { Controller, Get , Req} from '@nestjs/common';
-import { AppService } from './app.service';
+import {Controller, Get} from "@nestjs/common";
+import {CommonService} from "./common.service";
 
 @Controller()
-export class AppController {
-  constructor(private readonly appService: AppService) {}
+export class AppController{
+    constructor(private readonly commonService: CommonService){}
 
-  @Get()
-  getHello(@Req() req: Request): string {
-    console.log(req);
-    return this.appService.getHello();
-  }
+    @Get('/common-hello')
+    getCommonHello(): string{
+        return this.commonService.hello();
+    }
 }
