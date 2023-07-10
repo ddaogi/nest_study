@@ -1,6 +1,9 @@
 import Mail = require('nodemailer/lib/mailer');
 import * as nodemailer from 'nodemailer';
-import { Injectable } from '@nestjs/common';
+import {Inject, Injectable} from '@nestjs/common';
+import emailConfig from "../config/emailConfig";
+import {ConfigType} from "@nestjs/config";
+
 
 interface EmailOptions{
     to: string;
@@ -12,18 +15,30 @@ interface EmailOptions{
 export class EmailService {
     private transporter: Mail;
 
-    constructor(){
+    // constructor(){
+    //     this.transporter = nodemailer.createTransport({
+    //         service: 'Gmail',
+    //         auth:{
+    //             user: 'ddaogi229',
+    //             pass: 'encwswfxhdlxsqct'
+    //         }
+    //     });
+    // }
+
+    constructor(@Inject(emailConfig.KEY) private config: ConfigType<typeof emailConfig>){
         this.transporter = nodemailer.createTransport({
-            service: 'Gmail',
-            auth:{
-                user: 'ddaogi229',
-                pass: 'encwswfxhdlxsqct'
+            service: config.service,
+            auth: {
+                user: config.auth.user,
+                pass: config.auth.pass,
             }
         });
     }
 
+
     async sendMemberJoinVerification(emailAddress: string, signupVerifyToken: string){
-        const baseUrl = 'http://localhost:3000';
+        // const baseUrl = 'http://localhost:3000';
+        const baseUrl = this.config.baseUrl;
 
         const url = `${baseUrl}/users/email-verify?signupVerifyToken=${signupVerifyToken}`;
 

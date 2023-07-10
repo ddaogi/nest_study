@@ -1,5 +1,6 @@
 import {Controller, Get} from "@nestjs/common";
 import {CommonService} from "./common.service";
+import {ConfigService} from '@nestjs/config';
 
 @Controller()
 export class AppController{
@@ -9,8 +10,18 @@ export class AppController{
     // getCommonHello(): string{
     //     return this.commonService.hello();
     // }
+    constructor(
+        private readonly configService: ConfigService,
+    ){}
+
+    @Get('/db-host-from-config')
+    getDatabaseHostFromConfigService(): string{
+        return this.configService.get('DATABASE_HOST');
+    }
+
     @Get()
     getHello(): string{
         return process.env.DATABASE_HOST;
+
     }
 }

@@ -34,7 +34,6 @@ export class UsersController {
     @Get('/:id')
     async getUserInfo(@Param('id') userId: string): Promise<UserInfo> {
         return await this.usersService.getUserInfo(userId);
-        return;
     }
 
     @Delete(':id')
