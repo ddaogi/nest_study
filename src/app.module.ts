@@ -11,6 +11,8 @@ import {ConfigModule, ConfigService} from "@nestjs/config";
 import {CommonModule} from "./common.module";
 import emailConfig from "./config/emailConfig";
 import {validationSchema} from "./config/validation.schema";
+import {TypeOrmModule} from "@nestjs/typeorm";
+import {UsersEntity} from "./users/users.entity";
 
 // @Module({
 //   imports: [ConfigModule.forRoot({
@@ -30,8 +32,21 @@ import {validationSchema} from "./config/validation.schema";
         validationSchema,
       }),
       UsersModule,
+      TypeOrmModule.forRoot({
+          type: 'mysql',
+          host: process.env.DATABASE_HOST, //localhost
+          port:3306,
+          username: process.env.DATABASE_USERNAME, // 'root'
+          password: process.env.DATABASE_PASSWORD, //'test'
+          database:'test',
+          // entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          entities:[UsersEntity],
+          synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
+
+      }),
   ],
   controllers: [],
   providers:[],
 })
+
 export class AppModule {}
