@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import {MiddlewareConsumer, Module, NestModule, RequestMethod} from '@nestjs/common';
 import { UsersController } from './users/users.controller';
 import {UsersService} from "./users/users.service";
 import { EmailService } from './email/email.service';
@@ -13,6 +13,8 @@ import emailConfig from "./config/emailConfig";
 import {validationSchema} from "./config/validation.schema";
 import {TypeOrmModule} from "@nestjs/typeorm";
 import {UsersEntity} from "./users/users.entity";
+import { LoggerMiddleware} from "./logger.middleware";
+import {Logger2Middleware} from "./logger2.middleware";
 
 // @Module({
 //   imports: [ConfigModule.forRoot({
@@ -49,4 +51,11 @@ import {UsersEntity} from "./users/users.entity";
   providers:[],
 })
 
-export class AppModule {}
+export class AppModule implements NestModule{
+    configure(consumer: MiddlewareConsumer): any{
+        consumer
+            .apply(LoggerMiddleware, Logger2Middleware)
+            // .exclude({ path: '/users', method: RequestMethod.GET})
+            .forRoutes(UsersController);
+    }
+}
