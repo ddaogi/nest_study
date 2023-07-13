@@ -18,6 +18,10 @@ export class AppController{
 
     constructor(private readonly appService: AppService){}
 
+    @Get('/error')
+    error(foo: any): string{
+        return foo.bar();
+    }
 
     @UseGuards(AuthGuard)
     @Get()

@@ -18,6 +18,16 @@ import {Logger2Middleware} from "./logger2.middleware";
 import {APP_GUARD} from "@nestjs/core";
 import {AuthGuard} from "./auth/auth.guard";
 import authConfig from "./auth/auth.config";
+import {LoggerModule} from "./logger.module";
+import {
+    utilities as nestWinstonModuleUtilities,
+    WinstonModule,
+}from 'nest-winston';
+import * as winston from 'winston';
+import {LoggingModule} from "./logging.module";
+import { TaskService } from './task/task.service';
+import {BatchModule} from "./batches/batch.module";
+import { BatchesController } from './batches/batches.controller';
 
 // @Module({
 //   imports: [ConfigModule.forRoot({
@@ -28,15 +38,19 @@ import authConfig from "./auth/auth.config";
 //   providers: [AppService,ConfigService], //[UsersService, EmailService]
 // })
 
+
 @Module({
   imports: [
+      BatchModule,
+        LoggingModule,
+      LoggerModule, UsersModule,
+
       ConfigModule.forRoot({
         isGlobal: true,
         envFilePath: [`${__dirname}/config/env/.${process.env.NODE_ENV}.env`],
         load: [emailConfig, authConfig],
         validationSchema,
       }),
-      UsersModule,
       TypeOrmModule.forRoot({
           type: 'mysql',
           host: process.env.DATABASE_HOST, //localhost
@@ -49,13 +63,26 @@ import authConfig from "./auth/auth.config";
           synchronize: process.env.DATABASE_SYNCHRONIZE === 'true',
 
       }),
+      WinstonModule.forRoot({
+          transports:[
+              new winston.transports.Console({
+                level: process.env.NODE_ENV ==='production'? 'info' : 'silly',
+                  format: winston.format.combine(
+                      winston.format.timestamp(),
+                      nestWinstonModuleUtilities.format.nestLike('MyApp',{prettyPrint: true}),
+                  ),
+              }),
+          ],
+      }),
   ],
-  controllers: [],
-  providers:[
+  controllers: [AppController, BatchesController],
+  providers:[AppService,
       {
           provide: APP_GUARD,
           useClass: AuthGuard,
       },
+
+
   ],
 })
 
