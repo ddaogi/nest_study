@@ -15,6 +15,9 @@ import {TypeOrmModule} from "@nestjs/typeorm";
 import {UsersEntity} from "./users/users.entity";
 import { LoggerMiddleware} from "./logger.middleware";
 import {Logger2Middleware} from "./logger2.middleware";
+import {APP_GUARD} from "@nestjs/core";
+import {AuthGuard} from "./auth/auth.guard";
+import authConfig from "./auth/auth.config";
 
 // @Module({
 //   imports: [ConfigModule.forRoot({
@@ -30,7 +33,7 @@ import {Logger2Middleware} from "./logger2.middleware";
       ConfigModule.forRoot({
         isGlobal: true,
         envFilePath: [`${__dirname}/config/env/.${process.env.NODE_ENV}.env`],
-        load: [emailConfig],
+        load: [emailConfig, authConfig],
         validationSchema,
       }),
       UsersModule,
@@ -48,8 +51,14 @@ import {Logger2Middleware} from "./logger2.middleware";
       }),
   ],
   controllers: [],
-  providers:[],
+  providers:[
+      {
+          provide: APP_GUARD,
+          useClass: AuthGuard,
+      },
+  ],
 })
+
 
 export class AppModule implements NestModule{
     configure(consumer: MiddlewareConsumer): any{

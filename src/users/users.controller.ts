@@ -8,18 +8,23 @@ import {
     Param,
     ParseIntPipe,
     Post,
-    Query
+    Query,
+    Headers
 } from '@nestjs/common';
 import {CreateUserDto} from './dto/create-user.dto';
 import {VerifyEmailDto} from "./dto/verify-email.dto";
 import {UserLoginDto} from "./dto/user-login.dto";
 import {UsersService} from "./users.service";
 import {ValidationPipe} from "../validation.pipe";
+import {AuthService} from "../auth/auth.service";
+import {UserInfo} from "./UserInfo";
+
 
 @Controller('users')
 export class UsersController {
 
-    constructor(private usersService: UsersService){}
+    constructor(private usersService: UsersService,
+                private authService: AuthService){}
 
     // @Post()
     // async createUser(@Body() dto: CreateUserDto): Promise<void> {
@@ -46,14 +51,21 @@ export class UsersController {
     // async getUserInfo(@Param('id') userId: string): Promise<UserInfo> {
     //     return await this.usersService.getUserInfo(userId);
     // }
+
     // @Get('/:id')
-    // findOne(@Param('id', new ParseIntPipe({errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE})) id: number){
+    // findOne(@Param('id', new ValidationPipe) id: number){
     //     return this.usersService.findOne(id);
     // }
-    @Get('/:id')
-    findOne(@Param('id', new ValidationPipe) id: number){
-        return this.usersService.findOne(id);
+    @Get(':id')
+    async getUserInfo(@Headers() headers: any, @Param('id') userId: string):
+    Promise<UserInfo>{
+        const jwtString = headers.authroization.split('Bearer ')[1];
+
+        this.authService.verify(jwtString);
+
+        return this.usersService.getUserInfo(userId)
     }
+
 
     @Get()
     findAll(

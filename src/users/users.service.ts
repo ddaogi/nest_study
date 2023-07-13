@@ -1,4 +1,11 @@
-import {Injectable, InternalServerErrorException, Post, Query, UnprocessableEntityException} from '@nestjs/common';
+import {
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException,
+    Post,
+    Query,
+    UnprocessableEntityException
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 // import { UpdateUserDto } from './dto/update-user.dto';
 import * as uuid from "uuid";
@@ -10,12 +17,14 @@ import {UsersModule} from "./users.module";
 import {DataSource, Repository} from "typeorm";
 import {ulid} from "ulid";
 import {query} from "express";
+import {AuthService} from "../auth/auth.service";
 
 
 @Injectable()
 export class UsersService {
     constructor(private emailService: EmailService,
                 private dataSource: DataSource,
+                private authService: AuthService,
                 @InjectRepository(UsersEntity) private usersRepository: Repository<UsersEntity>){}
     create(createUserDto: CreateUserDto) {
         return 'This action adds a new user';
@@ -66,23 +75,55 @@ export class UsersService {
         // TODO
         // 1. DB에서 signupVerifyToken으로 회원가입처리중인유저가있는지 조회하고 없다면 에러 처리
         // 2. 바로 로그인 상태가 되도록 jwt 발급
+        const user = await this.usersRepository.findOne({
+            where: { signupVerifyToken}
+        });
+        if (!user){
+            throw new NotFoundException('유저가 존재하지 않습니다.');
+        }
 
-        throw new Error('Method not implemented.');
+        return this.authService.login({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        })
+
+        // throw new Error('Method not implemented.');
     }
 
-    async login(email: string, password: string): Promise<string>{
-        //TODO
-        // 1. email, password를 가진 유저가 존재하는지 DB에서 확인하고 없다면 에러 처리
-        // 2. JWT를 발급
-        throw new Error('Method not implemented');
+    async login(email: string, password: string): Promise<string> {
+        const user = await this.usersRepository.findOne({
+            where: { email, password }
+        });
+
+        if (!user) {
+            throw new NotFoundException('유저가 존재하지 않습니다');
+        }
+
+        return this.authService.login({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        });
     }
 
-    async getUserInfo(userId: string): Promise<UserInfo>{
+    async getUserInfo(userId: string):Promise<UserInfo>{
         //TODO
         // 1. userId를 가진 유저가 존재하는지 DB에서 확인하고 없다면 에러 처리
         // 2. 조회된 데이터를 UserInfo 타입으로 응답
+        const user = await this.usersRepository.findOne({
+            where:{id:userId}
+        });
 
-        throw new Error('Method not implemented');
+        if(!user){
+            throw new NotFoundException("유저가 존재하지 않습니다")
+        }
+        return{
+            id: user.id,
+            name: user.name,
+            email: user.email
+        }
+
     }
 
     private async saveUser(name: string, email: string, password: string, signupVerifyToken:string){
